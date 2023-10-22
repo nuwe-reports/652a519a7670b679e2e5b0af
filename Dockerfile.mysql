@@ -5,11 +5,8 @@ FROM mysql:5.7
 ENV MYSQL_ROOT_PASSWORD=root
 ENV MYSQL_DATABASE=accwe-hospital
 
-# Copia el script de inicialización de la base de datos
-COPY ./initilize.sql /docker-entrypoint-initdb.d/
+# Crea un volumen para almacenar los datos de la base de datos MySQL
+VOLUME /var/lib/mysql
 
 # Expone el puerto 3306 para que se pueda acceder a la base de datos
 EXPOSE 3306
-
-# Crea un volumen para almacenar los datos de la base de datos MySQL
-VOLUME /var/lib/mysql

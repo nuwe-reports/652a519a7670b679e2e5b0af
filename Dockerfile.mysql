@@ -3,7 +3,7 @@ FROM mysql:5.7
 
 # Configura las variables de entorno para la base de datos
 ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=hospital-ddbb
+ENV MYSQL_DATABASE=accwe-hospital
 
 # Copia el script de inicialización de la base de datos
 COPY ./initilize.sql /docker-entrypoint-initdb.d/

@@ -1,0 +1,15 @@
+# Imagen de Docker que contiene la base de datos MySQL
+FROM mysql:5.7
+
+# Configura las variables de entorno para la base de datos
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=hospital-ddbb
+
+# Copia el script de inicialización de la base de datos
+COPY ./initilize.sql /docker-entrypoint-initdb.d/
+
+# Expone el puerto 3306 para que se pueda acceder a la base de datos
+EXPOSE 3306
+
+# Crea un volumen para almacenar los datos de la base de datos MySQL
+VOLUME /var/lib/mysql

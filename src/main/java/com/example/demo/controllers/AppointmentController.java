@@ -3,7 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.repositories.*;
 import com.example.demo.entities.*;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,56 +27,62 @@ public class AppointmentController {
     AppointmentRepository appointmentRepository;
 
     @GetMapping("/appointments")
-    public ResponseEntity<List<Appointment>> getAllAppointments(){
-        List<Appointment> appointments = new ArrayList<>();
+    public ResponseEntity<List<Appointment>> getAllAppointments() {
+        List<Appointment> appointments = appointmentRepository.findAll();
 
-        appointmentRepository.findAll().forEach(appointments::add);
-
-        if (appointments.isEmpty()){
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-
-        return new ResponseEntity<>(appointments, HttpStatus.OK);
+        return (appointments.isEmpty())
+                ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(appointments, HttpStatus.OK);
     }
 
     @GetMapping("/appointments/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") long id){
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+    public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") long id) {
 
-        if (appointment.isPresent()){
-            return new ResponseEntity<>(appointment.get(),HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        Optional<Appointment> optionalAppointment = appointmentRepository.findById(id);
+
+        return optionalAppointment
+                .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("/appointment")
-    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment){
-        /** TODO 
-         * Implement this function, which acts as the POST /api/appointment endpoint.
-         * Make sure to check out the whole project. Specially the Appointment.java class
-         */
-        return new ResponseEntity<>(HttpStatus.I_AM_A_TEAPOT);
+    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
+
+        List<Appointment> appointments = appointmentRepository.findAll();
+
+        if (appointment.getStartsAt().equals(appointment.getFinishesAt())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        boolean isOverlap = appointments.stream()
+                .anyMatch(existingAppointment -> existingAppointment.overlaps(appointment));
+
+        if (isOverlap) {
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        appointments.add(appointmentRepository.save(appointment));
+        return new ResponseEntity<>(Collections.singletonList(appointment), HttpStatus.OK);
     }
 
 
     @DeleteMapping("/appointments/{id}")
-    public ResponseEntity<HttpStatus> deleteAppointment(@PathVariable("id") long id){
+    public ResponseEntity<HttpStatus> deleteAppointment(@PathVariable("id") long id) {
 
         Optional<Appointment> appointment = appointmentRepository.findById(id);
 
-        if (!appointment.isPresent()){
+        if (!appointment.isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         appointmentRepository.deleteById(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
-        
+
     }
 
     @DeleteMapping("/appointments")
-    public ResponseEntity<HttpStatus> deleteAllAppointments(){
+    public ResponseEntity<HttpStatus> deleteAllAppointments() {
         appointmentRepository.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -1,0 +1,26 @@
+# Primer paso: Ejecutar los tests JUnit
+FROM maven:4.0.0-openjdk-8-slim AS test
+WORKDIR /appTest
+COPY . /appTest
+RUN mvn clean test
+
+# Segundo paso: Construir y empaquetar el microservicio
+FROM maven:3.8.4-openjdk-8 AS build
+WORKDIR /appBuild
+COPY --from=test /appTest /appBuild
+RUN mvn package -DskipTests
+
+# Tercer paso: Ejecutar el microservicio y configurar la base de datos
+FROM openjdk:8-jre-slim
+WORKDIR /appRun
+COPY --from=builder /appBuild/target/*.war /appRun/accenture-techhub-0.0.1-SNAPSHOT.war
+
+ENV SPRING_DATASOURCE_USERNAME=root
+ENV SPRING_DATASOURCE_PASSWORD=root
+ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/hospital-ddbb
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "accenture-techhub-0.0.1-SNAPSHOT.war"]
+
+
